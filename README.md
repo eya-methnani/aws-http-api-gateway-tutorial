@@ -104,4 +104,4 @@ You can test the API endpoints using Postman:
 
 ## Credits
 
-This project was created by [Your Name]. It serves as a basic example of creating a serverless application using AWS services.
+This project was created by Eya Methnani. It serves as a basic example of creating a serverless application using AWS services.
