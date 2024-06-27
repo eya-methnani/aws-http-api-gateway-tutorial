@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        input {
+            width: 200px;
+        }
+        button {
+            background-color: #28a745;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            margin-top: 200px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        #result, #messages {
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        const apiUrl = 'https://rjl6ukb5h1.execute-api.us-east-1.amazonaws.com'; // Replace with your actual API Gateway URL
+
+        async function createItem() {
+            const data = { id: document.getElementById('createId').value, data: document.getElementById('createData').value };
+            try {
+                const response = await fetch(`${apiUrl}/items`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                document.getElementById('result').innerHTML = `<p>Item Created: ${JSON.stringify(result)}</p>`;
+            } catch (error) {
+                console.error('Error creating item:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error creating item</p>`;
+            }
+        }
+
+        async function getItem() {
+            const itemId = document.getElementById('getItemId').value;
+            try {
+                const response = await fetch(`${apiUrl}/items/${itemId}`, {
+                    method: 'GET'
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `<p>Item Retrieved: ${JSON.stringify(result)}</p>`;
+                } else {
+                    document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+                }
+            } catch (error) {
+                console.error('Error getting item:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error getting item</p>`;
+            }
+        }
+
+        async function updateItem() {
+            const itemId = document.getElementById('updateId').value;
+            const data = { data: document.getElementById('updateData').value };
+            try {
+                const response = await fetch(`${apiUrl}/items/${itemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `<p>Item Updated: ${JSON.stringify(result)}</p>`;
+                } else {
+                    document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+                }
+            } catch (error) {
+                console.error('Error updating item:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error updating item</p>`;
+            }
+        }
+
+        async function deleteItem() {
+            const itemId = document.getElementById('deleteId').value;
+            try {
+                const response = await fetch(`${apiUrl}/items/${itemId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `<p>${result.message}</p>`;
+                } else {
+                    document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+                }
+            } catch (error) {
+                console.error('Error deleting item:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error deleting item</p>`;
+            }
+        }
+
+        // WebSocket Chat
+        const ws = new WebSocket('wss://uoa4jdond4.execute-api.us-east-1.amazonaws.com/production');
+
+        ws.onopen = () => {
+            console.log('Connected to WebSocket');
+        };
+
+        ws.onmessage = (event) => {
+            const messages = document.getElementById('messages');
+            const message = document.createElement('li');
+            message.textContent = event.data;
+            messages.appendChild(message);
+        };
+
+        ws.onclose = () => {
+            console.log('Disconnected from WebSocket');
+        };
+
+        function sendMessage() {
+            const input = document.getElementById('message');
+            const message = input.value;
+            ws.send(JSON.stringify({ action: 'sendmessage', data: message }));
+            input.value = '';
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Serverless App</h1>
+        
+        <h2>Create Item</h2>
+        <input type="text" id="createId" placeholder="ID">
+        <input type="text" id="createData" placeholder="Data">
+        <button onclick="createItem()">Create</button>
+
+        <h2>Get Item</h2>
+        <input type="text" id="getItemId" placeholder="ID">
+        <button onclick="getItem()">Get</button>
+
+        <h2>Update Item</h2>
+        <input type="text" id="updateId" placeholder="ID">
+        <input type="text" id="updateData" placeholder="New Data">
+        <button onclick="updateItem()">Update</button>
+
+        <h2>Delete Item</h2>
+        <input type="text" id="deleteId" placeholder="ID">
+        <button onclick="deleteItem()">Delete</button>
+
+        <h2>WebSocket Chat</h2>
+        <input type="text" id="message" placeholder="Enter message">
+        <button onclick="sendMessage()">Send</button>
+        <ul id="messages"></ul>
+
+        <div id="result"></div>
+    </div>
+</body>
+</html>
